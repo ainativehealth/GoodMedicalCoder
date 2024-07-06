@@ -1,11 +1,14 @@
 import os
 from dotenv import load_dotenv
 import instructor
-from openai import  AzureOpenAI
+from openai import  AzureOpenAI, OpenAI
 
 load_dotenv()
 
-# Azure OpenAI
+# openai_client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
+# openai_client = instructor.patch(openai_client)
+
+
 azure_client = AzureOpenAI(
         api_key=os.environ["AZURE_OPENAI_API_KEY"],
         api_version="2024-02-15-preview",
