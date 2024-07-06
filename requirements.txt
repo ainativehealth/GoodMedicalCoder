@@ -1,0 +1,4 @@
+intructor
+openai
+pydantic
+ragatouille
