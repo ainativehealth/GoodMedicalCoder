@@ -1,6 +1,6 @@
 import csv
 import random
-from codify.codify import Codify
+from codify import Codify
 from datetime import datetime
 
 def normalize_code(code):
