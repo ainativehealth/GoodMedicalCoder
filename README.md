@@ -1,7 +1,6 @@
 # ICD-10 Code Prediction Experiment
 
-This repository contains the code and resources needed to reproduce the experiments detailed in the paper on ICD-10 code prediction using machine learning models.
-
+This repository contains the code and resources needed to reproduce the experiments detailed in the paper of **Large Language Models are good medical coders, if provided with tools**
 ## Requirements
 
 Before running the code, ensure you have the required dependencies installed. You can install them using:
