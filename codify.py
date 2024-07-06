@@ -16,6 +16,10 @@ class CodeChoice(BaseModel):
 
 class DiagnosisRanking(BaseModel):
     top_one: CodeChoice = Field(..., description="Most suitable ICD code")
+
+class ControlGroupOutput(BaseModel):
+    top_one: str = Field(..., description="Most suitable ICD code, format example: A0103, B081, etc  ")
+
     
 class Codify:
     def __init__(self):
