@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from config import groq_client#, azure_client #, openai_client
-
+from langfuse.decorators import observe
 class Agent(BaseModel):
     response_model: type[BaseModel]
     ai_provider: str
@@ -28,6 +28,7 @@ class Agent(BaseModel):
         else:
             raise ValueError(f"Invalid AI provider: {self.ai_provider}")
 
+    @observe()
     def _perform_inference(self, client, message: str, system_prompt: str):
         try:
 
@@ -40,10 +41,13 @@ class Agent(BaseModel):
                     "role": "user",
                     "content": message
                 }],
+                temperature=0,
                 response_model=self.response_model,
-                max_tokens=2000,
-                max_retries=2
+                max_tokens=8000,
+                max_retries=2,
             )
+            # print('@@@@@@@@@@@@', response.choices[0])
+            # response_dict = response.choices[0].message.content
             response_dict = response.dict() if isinstance(response, BaseModel) else response
             return response_dict
 

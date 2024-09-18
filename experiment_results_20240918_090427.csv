@@ -1,0 +1,11 @@
+Diagnosis Description,Reference Code,Retrieve-Rank,Vanilla GPT-3.5-turbo,Retrieve-Rank Match,Vanilla GPT-3.5 turbo match
+"Cholera due to Vibrio cholerae 01, biovar cholerae",A000,A000,,Yes,
+"Cholera due to Vibrio cholerae 01, biovar eltor",A001,A001,,Yes,
+"Cholera, unspecified",A009,A009,,Yes,
+"Typhoid fever, unspecified",A0100,A0100,,Yes,
+Typhoid meningitis,A0101,A0101,,Yes,
+Typhoid fever with heart involvement,A0102,A0102,,Yes,
+Typhoid pneumonia,A0103,A0103,,Yes,
+Typhoid arthritis,A0104,A0104,,Yes,
+Typhoid osteomyelitis,A0105,A0105,,Yes,
+Typhoid fever with other complications,A0109,A0109,,Yes,

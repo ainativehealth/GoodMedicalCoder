@@ -8,8 +8,11 @@ from typing_extensions import Annotated
 
 from agent import Agent
 from ragatouille import RAGPretrainedModel
+from rerankers import Reranker, Document
 
-
+# Load the RAG model
+colbert = RAGPretrainedModel.from_pretrained("colbert-ir/colbertv2.0")
+ranker =  Reranker("colbert")
 class CodeChoice(BaseModel):
     code: str
     description: str
@@ -51,7 +54,6 @@ class Codify:
 
     def get_icd_code(self, query: str) -> dict:
         results = self.icd_database.search(query, k = 15)
-        print("######################", results)
         if not results:
             raise ValueError(f"No ICD code found for query: {query}")
         return results
@@ -64,11 +66,13 @@ class Codify:
     def get_ranked_icd_codes(self, query: str):
         # Get ICD code references
         icd_references = self.get_icd_code(query)
-
+        documents = [Document(text=doc["content"], metadata=doc["document_metadata"], doc_id=doc["document_id"]) for doc in icd_references]
+        docs = ranker.rank(query, docs=documents)
+        result = docs.top_k(1)
         # Rank ICD codes
-        ranked_codes = self.simple_rerank(query, icd_references)
-
-        return ranked_codes
+        # ranked_codes = self.simple_rerank(query, icd_references)
+        # return ranked_codes
+        return {"top_one": {"code": result[0].metadata["code"], "description": result[0].text}}
 
 
     def get_control_group_output(self, query: str):

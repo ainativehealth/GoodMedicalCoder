@@ -2,7 +2,7 @@ import csv
 import random
 from codify import Codify
 from datetime import datetime
-
+from langfuse.decorators import observe
 def normalize_code(code):
     return code.replace('.', '').upper()
 
@@ -11,6 +11,7 @@ def code_match(true_code, predicted_code):
     predicted_main = normalize_code(predicted_code).split()[0]
     return true_main == predicted_main
 
+@observe()
 def run_experiment(csv_file_path, sample_size=100):
     codify = Codify()
     results = []
@@ -24,61 +25,64 @@ def run_experiment(csv_file_path, sample_size=100):
 
     print(f"Total rows in CSV: {len(all_rows)}")
 
-    while len(results) < sample_size:
+    number_of_correct_codes = 0
+    page = 1
+    for row in all_rows[sample_size * (page - 1):sample_size]:
+    # while len(results) < sample_size:
         row = random.choice(all_rows)
-        number_of_correct_codes = 0
         if len(row) == 1:  # Now we expect only one column
             parts = row[0].split('|')
             if len(parts) == 2:
                 description = parts[0].strip()
                 true_code = parts[1].strip()
-
-                print(f"\nProcessing: {description}")
-
-                # Regular prediction
-                result = codify.get_ranked_icd_codes(description)
-                predicted_code = normalize_code(result['top_one']['code'])
-                predicted_description = result['top_one']['description']
-
-                # Control group prediction
-                # control_result = codify.get_control_group_output(description)
-                # control_predicted_code = normalize_code(control_result['top_one']['code'])
-                # control_predicted_description = control_result['top_one']['description']
-
-                top_one_match = code_match(true_code, predicted_code)
-                # control_top_one_match = code_match(true_code, control_predicted_code)
-                if top_one_match:
-                    number_of_correct_codes += 1
-                print(f"Diagnosis Description: {description}")
-                print(f"Reference Code: {true_code}")
-                print(f"Retrieve-Rank: {predicted_code}")
-                # print(f"Vanilla GPT-3.5-turbo: {control_predicted_code}")
-                print(f"Retrieve-Rank Match: {'Yes' if top_one_match else 'No'}")
-                # print(f"Vanilla GPT-3.5 turbo match: {'Yes' if control_top_one_match else 'No'}")
-
-                results.append({
-                    'description': description,
-                    'true_code': normalize_code(true_code),
-                    'predicted_code': predicted_code,
-                    'predicted_description': predicted_description,
-                    # 'control_predicted_code': control_predicted_code,
-                    # 'control_predicted_description': control_predicted_description,
-                    'top_one_match': top_one_match,
-                    # 'control_top_one_match': control_top_one_match,
-                })
             else:
-                print(f"Skipping row: {row} (incorrect format)")
+                print(f"Skipping row: {row} (incorrect number of columns)")
                 skipped_samples += 1
-        else:
-            print(f"Skipping row: {row} (incorrect number of columns)")
-            skipped_samples += 1
+        if len(row) == 2:  # Now we expect two columns
+                description = row[0].strip()
+                true_code = row[1].strip()
+
+        print(f"\nProcessing: {description}")
+
+        # Regular prediction
+        result = codify.get_ranked_icd_codes(description)
+        predicted_code = normalize_code(result['top_one']['code'])
+        predicted_description = result['top_one']['description']
+
+        # Control group prediction
+        # control_result = codify.get_control_group_output(description)
+        # control_predicted_code = normalize_code(control_result['top_one']['code'])
+        # control_predicted_description = control_result['top_one']['description']
+
+        top_one_match = code_match(true_code, predicted_code)
+        # control_top_one_match = code_match(true_code, control_predicted_code)
+        if top_one_match:
+            number_of_correct_codes += 1
+        print(f"Diagnosis Description: {description}")
+        print(f"Reference Code: {true_code}")
+        print(f"Retrieve-Rank: {predicted_code}")
+        # print(f"Vanilla GPT-3.5-turbo: {control_predicted_code}")
+        print(f"Retrieve-Rank Match: {'Yes' if top_one_match else 'No'}")
+        # print(f"Vanilla GPT-3.5 turbo match: {'Yes' if control_top_one_match else 'No'}")
+
+        results.append({
+            'description': description,
+            'true_code': normalize_code(true_code),
+            'predicted_code': predicted_code,
+            'predicted_description': predicted_description,
+            # 'control_predicted_code': control_predicted_code,
+            # 'control_predicted_description': control_predicted_description,
+            'top_one_match': top_one_match,
+            # 'control_top_one_match': control_top_one_match,
+        })
 
     # Calculate overall statistics
     total_samples = len(results)
-    top_one_accuracy = sum(r['top_one_match'] for r in results) / total_samples * 100
+    top_one_accuracy = number_of_correct_codes / total_samples * 100
     # control_top_one_accuracy = sum(r['control_top_one_match'] for r in results) / total_samples * 100
 
     print(f"\nTotal processed samples: {total_samples}")
+    print(f"Number of correct prediction: {number_of_correct_codes}")
     print(f"Skipped samples: {skipped_samples}")
     print(f"Top One Accuracy: {top_one_accuracy:.2f}%")
     # print(f"Control Top One Accuracy: {control_top_one_accuracy:.2f}%")
@@ -104,4 +108,4 @@ def run_experiment(csv_file_path, sample_size=100):
 
 if __name__ == "__main__":
     csv_file_path = "ICD-10_formatted.csv"
-    run_experiment(csv_file_path, sample_size=10)
+    run_experiment(csv_file_path, sample_size=10000)
