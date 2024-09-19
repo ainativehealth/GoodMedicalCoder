@@ -1,7 +1,8 @@
 import csv
 import random
 from codify import Codify
-from datetime import datetime
+from datetime import datetime, timedelta
+import time
 from langfuse.decorators import observe
 def normalize_code(code):
     return code.replace('.', '').upper()
@@ -25,11 +26,12 @@ def run_experiment(csv_file_path, sample_size=100):
 
     print(f"Total rows in CSV: {len(all_rows)}")
 
-    number_of_correct_codes = 0
+    number_of_traitement = 0
     page = 1
     for row in all_rows[sample_size * (page - 1):sample_size]:
-    # while len(results) < sample_size:
+    # for row in all_rows:
         row = random.choice(all_rows)
+        # row = ["Infectious gastroenteritis and colitis, unspecified | A09"]
         if len(row) == 1:  # Now we expect only one column
             parts = row[0].split('|')
             if len(parts) == 2:
@@ -43,7 +45,7 @@ def run_experiment(csv_file_path, sample_size=100):
                 true_code = row[1].strip()
 
         print(f"\nProcessing: {description}")
-
+        number_of_traitement += 1
         # Regular prediction
         result = codify.get_ranked_icd_codes(description)
         predicted_code = normalize_code(result['top_one']['code'])
@@ -75,6 +77,7 @@ def run_experiment(csv_file_path, sample_size=100):
             'top_one_match': top_one_match,
             # 'control_top_one_match': control_top_one_match,
         })
+        print(f"Rest to process: {total_samples - number_of_traitement}")
 
     # Calculate overall statistics
     total_samples = len(results)
@@ -90,6 +93,7 @@ def run_experiment(csv_file_path, sample_size=100):
     # Log results to CSV
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = f"experiment_results_{timestamp}.csv"
+    negative_results = f"negative_results{timestamp}.csv"
     with open(output_file, 'w', newline='') as csvfile:
         fieldnames = ['Diagnosis Description', 'Reference Code', 'Retrieve-Rank', 'Vanilla GPT-3.5-turbo', 'Retrieve-Rank Match', 'Vanilla GPT-3.5 turbo match']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -103,9 +107,26 @@ def run_experiment(csv_file_path, sample_size=100):
                 'Retrieve-Rank Match': 'Yes' if result['top_one_match'] else 'No',
                 # 'Vanilla GPT-3.5 turbo match': 'Yes' if result['control_top_one_match'] else 'No'
             })
+    with open(negative_results, 'w', newline='') as csvfile:
+        fieldnames = ['Diagnosis Description', 'Reference Code', 'Retrieve-Rank', 'Vanilla GPT-3.5-turbo', 'Retrieve-Rank Match', 'Vanilla GPT-3.5 turbo match']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for result in results:
+            if not result['top_one_match']:
+                writer.writerow({
+                    'Diagnosis Description': result['description'],
+                    'Reference Code': result['true_code'],
+                    'Retrieve-Rank': result['predicted_code'],
+                    # 'Vanilla GPT-3.5-turbo': result['control_predicted_code'],
+                    'Retrieve-Rank Match': 'Yes' if result['top_one_match'] else 'No',
+                    # 'Vanilla GPT-3.5 turbo match': 'Yes' if result['control_top_one_match'] else 'No'
+                })
 
     print(f"Results logged to {output_file}")
 
 if __name__ == "__main__":
+    start = time.time()
     csv_file_path = "ICD-10_formatted.csv"
-    run_experiment(csv_file_path, sample_size=10000)
+    run_experiment(csv_file_path, sample_size=1000)
+    end = time.time()
+    print(f"Total time taken: {timedelta(seconds=end - start)}")

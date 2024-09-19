@@ -9,11 +9,11 @@ load_dotenv()
 # openai_client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
 # openai_client = instructor.patch(openai_client)
 
-groq_client = OpenAI(api_key = os.environ["GROQ_API_KEY"], base_url=os.environ["GROQ_ENDPOINT"], timeout=120 )
-groq_client = instructor.patch(groq_client)
-
-# groq_client = OpenAI(api_key ="ollama", base_url="http://localhost:11434/v1", timeout=120 )
+# groq_client = OpenAI(api_key = os.environ["GROQ_API_KEY"], base_url=os.environ["GROQ_ENDPOINT"], timeout=120 )
 # groq_client = instructor.patch(groq_client)
+
+groq_client = OpenAI(api_key ="ollama", base_url="http://localhost:11434/v1", timeout=120 )
+groq_client = instructor.patch(groq_client)
 
 # azure_client = AzureOpenAI(
 #         api_key=os.environ["AZURE_OPENAI_API_KEY"],

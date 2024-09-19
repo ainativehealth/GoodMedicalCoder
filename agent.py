@@ -42,7 +42,7 @@ class Agent(BaseModel):
                     "content": message
                 }],
                 temperature=0,
-                response_model=self.response_model,
+                # response_model=self.response_model,
                 max_tokens=8000,
                 max_retries=2,
             )
